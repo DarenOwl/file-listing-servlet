@@ -5,11 +5,31 @@
 <head>
     <title>Files</title>
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+        html {
+            font-family: Arial;
+        }
+        a{
+            color: darkcyan;
+        }
+        img {
+            height: 16px;
+            width: 16px;
+        }
+        .row-light {
+            background: ghostwhite;
+        }
+        .row-dark {
+            background: gainsboro;
+        }
+    </style>
 </head>
 <body>
 <%
     DirectoryContentModel directoryContent = (DirectoryContentModel) request.getAttribute("directoryContent");
 %>
+<a href="/logout">Выйти</a>
 <p><%=directoryContent.dateGenerated%></p>
 <h2><%=directoryContent.path%></h2>
 <hr>
@@ -24,11 +44,12 @@
         <th>Дата последнего изменения</th>
     </tr>
     <%
+        boolean hasDarkColor = false;
         for (FileModel fileModel : directoryContent.files) {
     %>
-    <tr>
+    <tr class="<%= hasDarkColor ? "row-dark" : "row-light"%>">
         <td>
-            <img src="img/<%= fileModel.isDirectory ? "folder.png" : "file.png"%>"/>
+            <img src="https://www.flaticon.com/svg/static/icons/svg/<%= fileModel.isDirectory ? "3628/3628828.svg" : "3628/3628808.svg"%>"/>
             <a href="/files?path=<%=fileModel.path%>">
                 <%=fileModel.name%>
             </a>
@@ -36,7 +57,10 @@
         <td><%= fileModel.isDirectory ? "" : fileModel.sizeInBytes + "B"%></td>
         <td><%= fileModel.lastModifiedDate%></td>
     </tr>
-    <%}%>
+    <%
+            hasDarkColor = !hasDarkColor;
+        }
+    %>
 </table>
 </body>
 </html>

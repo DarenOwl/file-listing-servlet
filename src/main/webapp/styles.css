@@ -1,0 +1,29 @@
+html {
+    font-family: Arial;
+}
+
+a{
+    color: darkcyan;
+}
+.auth-container {
+    margin: 0 auto;
+    width: min-content;
+    text-align: center;
+    background: darkcyan;
+    padding: 10px;
+}
+
+.row-light {
+    background: ghostwhite;
+}
+.row-dark {
+    background: gainsboro;
+}
+
+.text-light {
+    color: ghostwhite;
+}
+
+.text-dark {
+    color: darkcyan;
+}
