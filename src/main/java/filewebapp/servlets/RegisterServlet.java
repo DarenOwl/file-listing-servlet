@@ -9,7 +9,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+<<<<<<< HEAD
 import javax.validation.constraints.NotNull;
+=======
+>>>>>>> 980573bad4c7871f7622748abdda96824072b531
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -51,7 +54,11 @@ public class RegisterServlet extends HttpServlet {
         }
         Files.createDirectory(path);
 
+<<<<<<< HEAD
         try (FileOutputStream passwordWriter = new FileOutputStream(Files.createFile(path.resolve("password")).toFile());){
+=======
+        try (FileWriter passwordWriter = new FileWriter(Files.createFile(path.resolve("password.txt")).toFile());){
+>>>>>>> 980573bad4c7871f7622748abdda96824072b531
             passwordWriter.write(getPasswordHash(password));
         }
 
@@ -61,6 +68,7 @@ public class RegisterServlet extends HttpServlet {
         response.sendRedirect("/files");
     }
 
+<<<<<<< HEAD
     private byte[] getPasswordHash(String password) {
         byte[] hash = null;
         KeySpec spec = new PBEKeySpec(password.toCharArray(),new byte[1], 65536, 128);
@@ -74,5 +82,16 @@ public class RegisterServlet extends HttpServlet {
             return new byte[0];
         else
             return hash;
+=======
+    private String getPasswordHash(String password) {
+        KeySpec spec = new PBEKeySpec(password.toCharArray(),new byte[1], 65536, 128);
+        try {
+            SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+            return Arrays.toString(factory.generateSecret(spec).getEncoded());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+>>>>>>> 980573bad4c7871f7622748abdda96824072b531
     }
 }
