@@ -1,6 +1,7 @@
 package filewebapp.servlets;
 
 import filewebapp.models.DirectoryContentModel;
+import filewebapp.services.CatalogService;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -17,22 +18,15 @@ import java.nio.file.Paths;
 @WebServlet("/files")
 public class CatalogServlet extends HttpServlet {
     private final int STREAM_BUFFER_SIZE = 255;
-    private String HOME_PATH = null;
-    private String HOME_DIR = null;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        HOME_PATH = System.getProperty("os.name").toLowerCase().startsWith("win") ? "C:/" : "/";
-        if (System.getProperty("os.name").toLowerCase().startsWith("win")) {
-            HOME_PATH = "C:/";
-            HOME_DIR = "users/Julie/";
-        } else {
-            HOME_PATH = "/";
-            HOME_DIR = "home/Julie/";
-        }
-        if (Files.notExists(Paths.get(HOME_PATH + HOME_DIR))) {
-            throw new ServletException("Servlet can't access configured Home Directory");
+
+        CatalogService.ROOT_PATH = System.getProperty("os.name").toLowerCase().startsWith("win") ? "C:/users/" : "/home/";
+
+        if (Files.notExists(Paths.get(CatalogService.getPathPrefix()))) {
+            throw new ServletException("Servlet can't access configured Home Directory: " + CatalogService.getPathPrefix());
         }
     }
 
@@ -49,11 +43,11 @@ public class CatalogServlet extends HttpServlet {
 
         String requestPath = request.getParameter("path");
         if (requestPath == null || requestPath.isEmpty())
-            requestPath = HOME_PATH;
+            requestPath = CatalogService.getPathPrefix();
 
         Path path = Paths.get(requestPath);
-        if (!path.startsWith(HOME_PATH + HOME_DIR + username)) {
-            response.sendRedirect("/files?path=" + HOME_PATH + HOME_DIR + username);
+        if (!path.startsWith(CatalogService.getPathPrefix() + username)) {
+            response.sendRedirect("/files?path=" + CatalogService.getPathPrefix() + username);
             return;
         }
 
