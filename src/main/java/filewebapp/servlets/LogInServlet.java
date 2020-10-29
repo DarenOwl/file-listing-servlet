@@ -1,5 +1,6 @@
 package filewebapp.servlets;
 
+import filewebapp.entities.User;
 import filewebapp.services.UsersService;
 
 import javax.servlet.ServletConfig;
@@ -36,7 +37,8 @@ public class LogInServlet extends HttpServlet {
         if (login == null || login.equals("") || password == null || password.equals(""))
             return;
 
-        if (usersService.login(login, password)) {
+        User user = usersService.get(login, password);
+        if (user != null) {
             HttpSession session = request.getSession();
             session.setAttribute("user", login);
             response.sendRedirect("/files");

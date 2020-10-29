@@ -1,5 +1,6 @@
 package filewebapp.servlets;
 
+import filewebapp.entities.User;
 import filewebapp.services.CatalogService;
 import filewebapp.services.UsersService;
 
@@ -45,27 +46,23 @@ public class RegisterServlet extends HttpServlet {
 
         Path userHomePath = Paths.get(CatalogService.getPathPrefix() + login);
 
-        if (usersService.loginRegistered(login) || Files.exists(userHomePath)) {
+        if (Files.exists(userHomePath)) {
             request.setAttribute("errors", "пользователь с таким логином уже существует");
             request.getRequestDispatcher("views/register.jsp").forward(request, response);
             return;
         }
 
-        if (usersService.emailRegistered(email)) {
-            request.setAttribute("errors", "пользователь с таким email уже существует");
+        try {
+            usersService.add(login, email, password);
+        } catch (Exception e) {
+            request.setAttribute("errors", "такой пользователь уже существует");
             request.getRequestDispatcher("views/register.jsp").forward(request, response);
             return;
         }
 
-        if (usersService.register(login, email, password)) {
-            Files.createDirectory(userHomePath);
-
-            HttpSession session = request.getSession();
-            session.setAttribute("user", login);
-            response.sendRedirect("/files");
-        } else {
-            request.setAttribute("errors", "при регистрации возникла ошибка");
-            request.getRequestDispatcher("views/register.jsp").forward(request, response);
-        }
+        Files.createDirectory(userHomePath);
+        HttpSession session = request.getSession();
+        session.setAttribute("user", login);
+        response.sendRedirect("/files");
     }
 }

@@ -1,88 +1,65 @@
 package filewebapp.services;
 
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
-import java.security.spec.KeySpec;
-import java.sql.*;
-import java.util.Arrays;
+import filewebapp.daos.UserDAO;
+import filewebapp.entities.User;
+import filewebapp.utils.HashUtil;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.service.ServiceRegistry;
 
 public class UsersService {
     private static final String url = "jdbc:mysql://localhost:3306/filelisting_db?user=filewebapp&password=files";
 
-    public boolean register(String login, String email, String password) {
-        String hash = Arrays.toString(getPasswordHash(password));
+    private final SessionFactory sessionFactory;
 
-        try (
-                Connection connection = DriverManager.getConnection(url);
-                Statement statement = connection.createStatement();
-        ) {
-            int rowsInserted = statement.executeUpdate(
-                    "INSERT INTO users(login, email, password_hash, home_catalog) VALUES (\""
-                            + login + "\", \"" + email + "\", \"" + hash + "\", \"" + login + "\");");
-            return rowsInserted == 1;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
+    public UsersService() {
+        Configuration configuration = getMySqlConfiguration();
+        sessionFactory = createSessionFactory(configuration);
     }
 
-    public boolean login(String login, String password) {
-        String hash = Arrays.toString(getPasswordHash(password));
-
-        try (
-                Connection connection = DriverManager.getConnection(url);
-                Statement statement = connection.createStatement();
-                ResultSet resultSet = statement.executeQuery(
-                        "SELECT password_hash FROM users WHERE login = \"" + login + "\";");
-        ) {
-            return resultSet.next() && resultSet.getString("password_hash").equals(hash);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
+    public User get(String login){
+        Session session = sessionFactory.openSession();
+        User dataSet = new UserDAO(session).get(login);
+        session.close();
+        return dataSet;
     }
 
-    public boolean loginRegistered(String login) {
-        try (
-                Connection connection = DriverManager.getConnection(url);
-                Statement statement = connection.createStatement();
-                ResultSet resultSet = statement.executeQuery(
-                        "SELECT * FROM users WHERE login = \"" + login + "\";");
-        ) {
-            return resultSet.next();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
+    public User get(String login, String password){
+        Session session = sessionFactory.openSession();
+        User dataSet = new UserDAO(session).get(login, password);
+        session.close();
+        return dataSet;
     }
 
-    public boolean emailRegistered(String email) {
-        try (
-                Connection connection = DriverManager.getConnection(url);
-                Statement statement = connection.createStatement();
-                ResultSet resultSet = statement.executeQuery(
-                        "SELECT * FROM users WHERE email = \"" + email + "\";");
-        ) {
-            return resultSet.next();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
+    public void add(String login, String email, String password) {
+        Session session = sessionFactory.openSession();
+        Transaction transaction = session.beginTransaction();
+        UserDAO userDAO = new UserDAO(session);
+        userDAO.add(login, email, password);
+        transaction.commit();
+        session.close();
     }
 
+    private Configuration getMySqlConfiguration() {
+        Configuration configuration = new Configuration();
+        configuration.addAnnotatedClass(User.class);
+        configuration.setProperty("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
+        configuration.setProperty("hibernate.connection.driver_class", "com.mysql.jdbc.Driver");
+        configuration.setProperty("hibernate.connection.url", "jdbc:mysql://localhost:3306/filelisting_db");
+        configuration.setProperty("hibernate.connection.username", "filewebapp");
+        configuration.setProperty("hibernate.connection.password", "files");
+        configuration.setProperty("hibernate.show_sql", "true");
+        configuration.setProperty("hibernate.hbm2ddl.auto", "update");
+        return configuration;
+    }
 
-    private byte[] getPasswordHash(String password) {
-        byte[] hash = null;
-        KeySpec spec = new PBEKeySpec(password.toCharArray(), new byte[1], 65536, 128);
-        try {
-            SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-            hash = factory.generateSecret(spec).getEncoded();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        if (hash == null)
-            return new byte[0];
-        else
-            return hash;
+    private static SessionFactory createSessionFactory(Configuration configuration) {
+        StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder();
+        builder.applySettings(configuration.getProperties());
+        ServiceRegistry serviceRegistry = builder.build();
+        return configuration.buildSessionFactory(serviceRegistry);
     }
 }
